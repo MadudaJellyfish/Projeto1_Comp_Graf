@@ -5,10 +5,17 @@
 #include <iostream>
 
 #ifdef _WIN32
+<<<<<<< HEAD
 //#define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
 #include <glad/glad.h>
+=======
+#include <glad/glad.h>
+
 #elif __APPLE__
 #include <OpenGL/gl3.h>
+
+#elif __linux__
+#include <glad/glad.h>
 #endif
 
 QuadPtr Quad::Make (int nx, int ny, float dis)

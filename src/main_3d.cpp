@@ -1,4 +1,4 @@
-
+/* 
 #ifdef _WIN32
 #define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
 #include <glad/gl.h>
@@ -191,3 +191,4 @@ int main ()
   return 0;
 }
 
+ */
