@@ -43,6 +43,8 @@ public:
   void Load (StatePtr st);
   void Unload (StatePtr st);
 
+  unsigned int getPID() const { return m_pid; }
+
   // helper functions
   static unsigned int CreateShader (unsigned int shadertype, const std::string& filename);
   static void LinkProgram (unsigned int pid);

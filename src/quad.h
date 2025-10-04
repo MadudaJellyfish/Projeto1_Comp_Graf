@@ -12,9 +12,9 @@ class Quad : public Shape {
   unsigned int m_vao;
   unsigned int m_nind; // number of incident vertices
 protected:
-  Quad (int nx, int ny);
+  Quad (int nx, int ny, float dis);
 public:
-  static QuadPtr Make (int nx=1, int ny=1);
+  static QuadPtr Make (int nx=1, int ny=1, float dis=1.0f);
   virtual ~Quad ();
   virtual void Draw (StatePtr st);
 };

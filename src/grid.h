@@ -10,9 +10,9 @@ class Grid {
   float* m_coords;
   unsigned int* m_indices;
 protected:
-  Grid (int nx, int ny);
+  Grid (int nx, int ny, float dis);
 public:
-  static GridPtr Make (int nx, int ny);
+  static GridPtr Make (int nx, int ny, float dis);
   virtual ~Grid ();
   int GetNx ();
   int GetNy ();

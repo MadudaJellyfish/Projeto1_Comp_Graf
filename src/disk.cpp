@@ -39,6 +39,9 @@ Disk::Disk(int num_segments)
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0); // coord
 	glEnableVertexAttribArray(0);
 
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);  // texcoord
+	glEnableVertexAttribArray(1);
+
 }
 
 Disk::~Disk()

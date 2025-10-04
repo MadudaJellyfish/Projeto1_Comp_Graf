@@ -17,6 +17,7 @@
 #include "shape.h"
 #include "quad.h"
 #include "disk.h"
+#include "texture.h"
 
 #include <iostream>
 
@@ -71,46 +72,71 @@ static void initialize (void)
   // enable depth test 
   glEnable(GL_DEPTH_TEST);
 
-  // create objects
-  camera = Camera2D::Make(-8,8,-8,8);
+  // enable blending
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  //sol
+  // create objects 
+  camera = Camera2D::Make(-1,1,-1,1);
+  TexturePtr texture_space = Texture::Make("texture_space", "images/space.jpg");
+
+
+  ////espaco
+  auto espaco_trf = Transform::Make();
+  espaco_trf->Scale(2.0f, 2.0f, 1.0f);
+
+  ////sol
   auto sun_trf = Transform::Make();
+  sun_trf->Translate(0.25f, 0.25f, 1.0f);
+  sun_trf->Scale(0.5f, 0.5f, 0.0f);
 
+  //Venus
+  auto venus_orbit_trf = Transform::Make();
+  venus_orbit_trf->Translate(0.3f, 0.0f, 0.0f);
 
-  //terra
+  auto venus_trf = Transform::Make();
+  venus_trf->Scale(0.2f, 0.2f, 1.0f);
+
+  ////terra
   auto earth_orbit_trf = Transform::Make();
 
 
   auto earth_trf = Transform::Make();
-  earth_trf->Scale(0.4f, 0.4f, 1.0f);
-  //earth_trf->Translate(10.0f, 0.0f, 0.0f);
-  
-  
+  earth_trf->Scale(0.3f, 0.3f, 1.0f);
+  earth_trf->Translate(0.15f, 0.0f, 0.0f); //provisório
+  //
 
-  //lua
-  auto moon_orbit_trf = Transform::Make();
+  ////lua
+  //auto moon_orbit_trf = Transform::Make();
 
-  auto moon_trf = Transform::Make();
-  moon_trf->Scale(0.3f, 0.3f, 1.0f);
-  //moon_trf->Translate(3.0f, 0.0f, 0.0f);
+  //auto moon_trf = Transform::Make();
+  //moon_trf->Scale(0.5f, 0.5f, 1.0f);
+  //
   
+  ////texturas
+  TexturePtr sun_text = Texture::Make("sun_text", "images/sun.png");
+  TexturePtr earth_text = Texture::Make("earth_text", "images/earth.jpg");
+  TexturePtr venus_text = Texture::Make("venus_text", "images/venus.png");
+  //Texture::Make("moon_text", "images/moon.png");
   
   //hierarquia da cena
-  //Sol->Terra->Lua
+  //Espaço->Sol->Terra->Lua
 
-  float r, g, b = 0;
-  rgb_scale(173, 199, 239, r, g, b);
-  auto moon = Node::Make(moon_trf, { Color::Make(r, g, b) }, { Disk::Make(3600) });
-  auto moon_orbit = Node::Make(moon_orbit_trf, {}, {}, { moon });
+  //float r, g, b = 0;
+  //rgb_scale(173, 199, 239, r, g, b);
+  //auto moon = Node::Make(moon_trf, { Color::Make(r, g, b) }, { Disk::Make(3600) });
+  //auto moon_orbit = Node::Make(moon_orbit_trf, {}, {}, { moon });
 
-  rgb_scale(74, 118, 183, r, g, b);
 
-  auto earth = Node::Make(earth_trf, { Color::Make(r,g,b) }, { Disk::Make(3600) }, { moon_orbit });
+  auto venus = Node::Make(venus_trf, { Color::Make(1.0f,1.0f,1.0f), venus_text }, { Quad::Make(1,1,1) }, {});
+  auto venus_orbit = Node::Make(venus_orbit_trf, {}, {}, { venus });
+
+  auto earth = Node::Make(earth_trf, { Color::Make(1.0f,1.0f,1.0f), earth_text }, { Disk::Make(5000) }, {});
   auto earth_orbit = Node::Make(earth_orbit_trf, {}, {}, { earth });
 
-  rgb_scale(255, 237, 120, r, g, b);
-  auto sun = Node::Make(sun_trf, { Color::Make(r,g,b) }, { Disk::Make(3600) }, { earth_orbit });
+  auto sun = Node::Make(sun_trf, { Color::Make(1.0f,1.0f,1.0f), sun_text }, { Quad::Make(1,1,1) }, { earth_orbit, venus_orbit }); //quandrado num intervalo de [0-1] em x e y
+
+  auto espaco = Node::Make(espaco_trf, { Color::Make(1.0f, 1.0f, 1.0f), texture_space }, { Quad::Make(1,1,2) }); //quandrado num intervalo de [-1 - 0] em x e y
 
   auto shader = Shader::Make();
   shader->AttachVertexShader("shaders/2d/vertex.glsl");
@@ -118,10 +144,10 @@ static void initialize (void)
   shader->Link();
 
   // build scene
-  auto root = Node::Make(shader, {sun});
+  auto root = Node::Make(shader, {espaco, sun});
   scene = Scene::Make(root);
-  scene->AddEngine(MoveAstro::Make(earth_orbit_trf, 7.27f, 5));
-  scene->AddEngine(MoveAstro::Make(moon_orbit_trf, 14.0f, 2));
+  scene->AddEngine(MoveAstro::Make(earth_orbit_trf, 7.27f, 1.5f));
+  //scene->AddEngine(MoveAstro::Make(moon_orbit_trf, 14.0f, 1));
   
 
 }
