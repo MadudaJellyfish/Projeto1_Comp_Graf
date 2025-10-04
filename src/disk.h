@@ -1,20 +1,29 @@
 #include <memory>
+#include <vector>
+
 class Disk;
-using DiskPtr = std::shared_ptr<Disk>; 
+using DiskPtr = std::shared_ptr<Disk>;
 
 #ifndef DISK_H
 #define DISK_H
 
 #include "shape.h"
+#include "state.h"
 
-class Disk : public Shape {
-  unsigned int m_vao;
-  int m_nslice;
+class Disk: public Shape
+{
+	unsigned int m_vao;
+	std::vector<float> coord = {};
+	std::vector<unsigned char> color = {};
+
 protected:
-  Disk (int nslice);
+	Disk(int num_segments);
 public:
-  static DiskPtr Make (int nslice=64);
-  virtual ~Disk ();
-  virtual void Draw (StatePtr st);
+	static DiskPtr Make(int num_segments);
+	virtual ~Disk();
+	virtual void Draw(StatePtr state);
+
 };
-#endif
+
+#endif // DISK_H
+

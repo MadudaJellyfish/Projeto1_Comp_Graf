@@ -6,6 +6,7 @@ using QuadPtr = std::shared_ptr<Quad>;
 #define QUAD_H
 
 #include "shape.h"
+#include "state.h"
 
 class Quad : public Shape {
   unsigned int m_vao;

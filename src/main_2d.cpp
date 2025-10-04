@@ -1,7 +1,7 @@
 
 #ifdef _WIN32
 #define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
-#include <glad/gl.h>
+#include <glad/glad.h>
 #elif __APPLE__
 #include <OpenGL/gl3.h>
 #endif
@@ -14,64 +14,116 @@
 #include "transform.h"
 #include "error.h"
 #include "shader.h"
+#include "shape.h"
 #include "quad.h"
-#include "triangle.h"
+#include "disk.h"
 
 #include <iostream>
 
 static ScenePtr scene;
 static CameraPtr camera;
 
-class MovePointer;
-using MovePointerPtr = std::shared_ptr<MovePointer>;
-class MovePointer : public Engine 
+class MoveAstro;
+using MoveAstroPtr = std::shared_ptr<MoveAstro>;
+class MoveAstro : public Engine
 {
   TransformPtr m_trf;
+  float m_angular_velocity;
+  float m_radius;
+  float m_angle;
+
 protected:
-  MovePointer (TransformPtr trf) 
-  : m_trf(trf) 
+    MoveAstro(TransformPtr trf, float velocity, float radius)
+        : m_trf(trf),
+        m_angular_velocity(velocity),
+        m_radius(radius),
+        m_angle(0.0f)
   {
   }
 public:
-  static MovePointerPtr Make (TransformPtr trf)
+  static MoveAstroPtr Make (TransformPtr trf, float velocity, float radius)
   {
-    return MovePointerPtr(new MovePointer(trf));
+    return MoveAstroPtr(new MoveAstro(trf, velocity, radius));
   }
   virtual void Update (float dt)
   {
-    m_trf->Rotate(-dt/30.0f*180.0f,0,0,1);
+	  m_angle += -dt * m_angular_velocity;
+
+      m_trf->LoadIdentity();
+      m_trf->Rotate(m_angle,0,0,1);
+	  m_trf->Translate(m_radius, 0.0f, 0.0f);
   }
+
 };
+
+void rgb_scale(float r, float g, float b, float& r_out, float& g_out, float& b_out) 
+{
+	r_out = r / 255.0f;
+	g_out = g / 255.0f;
+	b_out = b / 255.0f;
+    return;
+}
 
 static void initialize (void)
 {
   // set background color: white 
-  glClearColor(0.8f,1.0f,1.0f,1.0f);
+  glClearColor(0.0f,0.0f,0.0f,1.0f);
   // enable depth test 
   glEnable(GL_DEPTH_TEST);
 
   // create objects
-  camera = Camera2D::Make(0,10,0,10);
+  camera = Camera2D::Make(-8,8,-8,8);
 
-  auto trf1 = Transform::Make();
-  trf1->Translate(3.0f,3.0f,-0.5f);
-  trf1->Scale(4.0f,4.0f,1.0f);
-  auto face = Node::Make(trf1,{Color::Make(1,1,1)},{Quad::Make()});
-  auto trf2 = Transform::Make();
-  trf2->Translate(5.0f,5.0f,0.0f);
-  auto trf3 = Transform::Make();
-  trf3->Scale(0.1f,2.0f,1.0f);
-  auto pointer = Node::Make(trf2,{Node::Make(trf3,{Color::Make(1,0,0)},{Triangle::Make()})});
+  //sol
+  auto sun_trf = Transform::Make();
+
+
+  //terra
+  auto earth_orbit_trf = Transform::Make();
+
+
+  auto earth_trf = Transform::Make();
+  earth_trf->Scale(0.4f, 0.4f, 1.0f);
+  //earth_trf->Translate(10.0f, 0.0f, 0.0f);
+  
+  
+
+  //lua
+  auto moon_orbit_trf = Transform::Make();
+
+  auto moon_trf = Transform::Make();
+  moon_trf->Scale(0.3f, 0.3f, 1.0f);
+  //moon_trf->Translate(3.0f, 0.0f, 0.0f);
+  
+  
+  //hierarquia da cena
+  //Sol->Terra->Lua
+
+  float r, g, b = 0;
+  rgb_scale(173, 199, 239, r, g, b);
+  auto moon = Node::Make(moon_trf, { Color::Make(r, g, b) }, { Disk::Make(3600) });
+  auto moon_orbit = Node::Make(moon_orbit_trf, {}, {}, { moon });
+
+  rgb_scale(74, 118, 183, r, g, b);
+
+  auto earth = Node::Make(earth_trf, { Color::Make(r,g,b) }, { Disk::Make(3600) }, { moon_orbit });
+  auto earth_orbit = Node::Make(earth_orbit_trf, {}, {}, { earth });
+
+  rgb_scale(255, 237, 120, r, g, b);
+  auto sun = Node::Make(sun_trf, { Color::Make(r,g,b) }, { Disk::Make(3600) }, { earth_orbit });
 
   auto shader = Shader::Make();
-  shader->AttachVertexShader("../shaders/2d/vertex.glsl");
-  shader->AttachFragmentShader("../shaders/2d/fragment.glsl");
+  shader->AttachVertexShader("shaders/2d/vertex.glsl");
+  shader->AttachFragmentShader("shaders/2d/fragment.glsl");
   shader->Link();
 
   // build scene
-  auto root = Node::Make(shader, {face,pointer});
+  auto root = Node::Make(shader, {sun});
   scene = Scene::Make(root);
-  scene->AddEngine(MovePointer::Make(trf2));
+  scene->AddEngine(MoveAstro::Make(earth_orbit_trf, 7.27f, 5));
+  scene->AddEngine(MoveAstro::Make(moon_orbit_trf, 14.0f, 2));
+  
+
 }
 
 static void display (GLFWwindow* win)
@@ -109,7 +161,7 @@ int main ()
 {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);       // required for mac os
@@ -125,7 +177,7 @@ int main ()
 
     glfwMakeContextCurrent(win);
 #ifdef _WIN32
-    if (!gladLoadGL(glfwGetProcAddress)) {
+    if (!gladLoadGL()) {
         printf("Failed to initialize GLAD OpenGL context\n");
         exit(1);
     }
