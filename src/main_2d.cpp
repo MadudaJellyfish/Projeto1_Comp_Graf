@@ -1,15 +1,10 @@
 
 #ifdef _WIN32
-#include <windows.h>
-// Use glad to initialize OpenGL context on Windows
+#define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
 #include <glad/glad.h>
-
 #elif __APPLE__
 #include <OpenGL/gl3.h>
-#elif __linux__
-#include <glad/glad.h>
 #endif
-
 #include <GLFW/glfw3.h>
 
 #include "scene.h"
@@ -62,6 +57,39 @@ public:
 
 };
 
+class AxisRotation;
+using AxisRotationPtr = std::shared_ptr<AxisRotation>;
+class AxisRotation : public Engine
+{
+    TransformPtr m_trf;
+    float m_angular_velocity;
+    float m_scale;
+    float m_angle;
+
+protected:
+    AxisRotation(TransformPtr trf, float velocity, float scale)
+        : m_trf(trf),
+        m_angular_velocity(velocity),
+        m_scale(scale),
+        m_angle(0.0f)
+    {
+    }
+public:
+    static AxisRotationPtr Make(TransformPtr trf, float velocity, float scale)
+    {
+        return AxisRotationPtr(new AxisRotation(trf, velocity, scale));
+    }
+    virtual void Update(float dt)
+    {
+        m_angle += -dt * m_angular_velocity;
+
+		m_trf->LoadIdentity();
+		m_trf->Scale(m_scale, m_scale, 1.0f);
+        m_trf->Rotate(m_angle, 0, 0, 1);
+    }
+
+};
+
 void rgb_scale(float r, float g, float b, float& r_out, float& g_out, float& b_out) 
 {
 	r_out = r / 255.0f;
@@ -83,7 +111,7 @@ static void initialize (void)
 
   // create objects 
   camera = Camera2D::Make(-1,1,-1,1);
-  TexturePtr texture_space = Texture::Make("texture_space", "images/space.jpg");
+  TexturePtr texture_space = Texture::Make("face", "images/space.jpg");
 
 
   ////espaco
@@ -92,54 +120,61 @@ static void initialize (void)
 
   ////sol
   auto sun_trf = Transform::Make();
-  sun_trf->Translate(0.25f, 0.25f, 1.0f);
+  sun_trf->Translate(0.0f, 0.0f, 1.0f);
   sun_trf->Scale(0.5f, 0.5f, 0.0f);
 
-  //Venus
-  auto venus_orbit_trf = Transform::Make();
-  venus_orbit_trf->Translate(0.3f, 0.0f, 0.0f);
+  //Mercury
+  auto mercury_orbit_trf = Transform::Make();
 
-  auto venus_trf = Transform::Make();
-  venus_trf->Scale(0.2f, 0.2f, 1.0f);
+  auto mercury_trf = Transform::Make();
+  mercury_trf->Scale(0.15f, 0.15f, 1.0f);
 
   ////terra
   auto earth_orbit_trf = Transform::Make();
-
-
+  auto earth_rotation_trf = Transform::Make();
   auto earth_trf = Transform::Make();
-  earth_trf->Scale(0.3f, 0.3f, 1.0f);
-  earth_trf->Translate(0.15f, 0.0f, 0.0f); //provisório
-  //
+ 
+ 
 
   ////lua
-  //auto moon_orbit_trf = Transform::Make();
+  auto moon_orbit_trf = Transform::Make();
 
-  //auto moon_trf = Transform::Make();
-  //moon_trf->Scale(0.5f, 0.5f, 1.0f);
+  auto moon_trf = Transform::Make();
+  moon_trf->Scale(0.25f, 0.25f, 1.0f);
   //
   
   ////texturas
-  TexturePtr sun_text = Texture::Make("sun_text", "images/sun.png");
-  TexturePtr earth_text = Texture::Make("earth_text", "images/earth.jpg");
-  TexturePtr venus_text = Texture::Make("venus_text", "images/venus.png");
-  //Texture::Make("moon_text", "images/moon.png");
-  
+  TexturePtr sun_text = Texture::Make("face", "images/sun.jpg");
+  TexturePtr earth_text = Texture::Make("face", "images/earth.jpg");
+  TexturePtr mercury_text = Texture::Make("face", "images/mercury.jpg");
+  TexturePtr moon_text = Texture::Make("face", "images/moon.jpeg");
+
   //hierarquia da cena
   //Espaço->Sol->Terra->Lua
 
-  //float r, g, b = 0;
-  //rgb_scale(173, 199, 239, r, g, b);
-  //auto moon = Node::Make(moon_trf, { Color::Make(r, g, b) }, { Disk::Make(3600) });
-  //auto moon_orbit = Node::Make(moon_orbit_trf, {}, {}, { moon });
+  DiskPtr disk_moon = Disk::Make(5000);
 
 
-  auto venus = Node::Make(venus_trf, { Color::Make(1.0f,1.0f,1.0f), venus_text }, { Quad::Make(1,1,1) }, {});
-  auto venus_orbit = Node::Make(venus_orbit_trf, {}, {}, { venus });
+  disk_moon->set_text_name("face");
+  auto moon = Node::Make(moon_trf, { moon_text }, { disk_moon });
 
-  auto earth = Node::Make(earth_trf, { Color::Make(1.0f,1.0f,1.0f), earth_text }, { Disk::Make(5000) }, {});
-  auto earth_orbit = Node::Make(earth_orbit_trf, {}, {}, { earth });
+  auto moon_orbit = Node::Make(moon_orbit_trf, {}, {}, { moon });
 
-  auto sun = Node::Make(sun_trf, { Color::Make(1.0f,1.0f,1.0f), sun_text }, { Quad::Make(1,1,1) }, { earth_orbit, venus_orbit }); //quandrado num intervalo de [0-1] em x e y
+  DiskPtr disk_earth = Disk::Make(5000);
+  disk_earth->set_text_name("face");
+  auto earth = Node::Make(earth_trf, { earth_text }, { disk_earth }, { });
+  auto earth_rotation = Node::Make(earth_rotation_trf, {}, {}, { earth,moon_orbit });
+
+  auto earth_orbit = Node::Make(earth_orbit_trf, {}, {}, { earth_rotation});
+
+  DiskPtr disk_mercury = Disk::Make(5000);
+  disk_mercury->set_text_name("face");
+  auto mercury = Node::Make(mercury_trf, { mercury_text }, { disk_mercury }, {});
+  auto mercury_orbit = Node::Make(mercury_orbit_trf, {}, {}, { mercury });
+
+  DiskPtr disk_sun = Disk::Make(5000);
+  disk_sun->set_text_name("face");
+  auto sun = Node::Make(sun_trf, { sun_text }, { disk_sun }, { earth_orbit, mercury_orbit }); //quandrado num intervalo de [0-1] em x e y
 
   auto espaco = Node::Make(espaco_trf, { Color::Make(1.0f, 1.0f, 1.0f), texture_space }, { Quad::Make(1,1,2) }); //quandrado num intervalo de [-1 - 0] em x e y
 
@@ -152,7 +187,10 @@ static void initialize (void)
   auto root = Node::Make(shader, {espaco, sun});
   scene = Scene::Make(root);
   scene->AddEngine(MoveAstro::Make(earth_orbit_trf, 7.27f, 1.5f));
-  //scene->AddEngine(MoveAstro::Make(moon_orbit_trf, 14.0f, 1));
+  scene->AddEngine(MoveAstro::Make(moon_orbit_trf, 14.0f, 1.0f));
+  scene->AddEngine(MoveAstro::Make(mercury_orbit_trf, 3.5f, 0.8f));
+  scene->AddEngine(AxisRotation::Make(earth_rotation_trf, 20.f, 0.3f));
+  
   
 
 }

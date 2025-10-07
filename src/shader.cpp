@@ -2,13 +2,10 @@
 #include "state.h"
 
 #ifdef _WIN32
+//#define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
 #include <glad/glad.h>
-
 #elif __APPLE__
 #include <OpenGL/gl3.h>
-
-#elif __linux__
-#include <glad/glad.h>
 #endif
 #include <glm/gtc/type_ptr.hpp>
 
@@ -149,14 +146,14 @@ void Shader::SetUniform (const std::string& varname, const std::vector<glm::mat4
 
 void Shader::ActiveTexture (const std::string& varname)
 {
-  SetUniform(varname,0/*m_texunit*/);
-  glActiveTexture(GL_TEXTURE0/*+m_texunit*/);
-  //m_texunit++;
+  SetUniform(varname,m_texunit);
+  glActiveTexture(GL_TEXTURE0+m_texunit);
+  m_texunit++;
 }
 
 void Shader::DeactiveTexture ()
 {
-  //m_texunit--;
+  m_texunit--;
 }
 
 void Shader::Load (StatePtr st)
