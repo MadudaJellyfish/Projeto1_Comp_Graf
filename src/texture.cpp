@@ -14,7 +14,7 @@
 #endif
 
 #include <iostream>
-
+static int i = 0;
 TexturePtr Texture::Make (const std::string& varname, const std::string& filename)
 {
   return TexturePtr(new Texture(varname,filename));

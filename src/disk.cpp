@@ -5,8 +5,12 @@
 
 #ifdef _WIN32
 #include <glad/glad.h>
-#else
+
+#elif __APPLE__
 #include <OpenGL/gl3.h>
+
+#elif __linux__
+#include <glad/glad.h>
 #endif
 
 DiskPtr Disk::Make(int num_segments)

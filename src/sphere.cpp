@@ -1,4 +1,4 @@
-#include "sphere.h"
+/* #include "sphere.h"
 #include "grid.h"
 #include "error.h"
 
@@ -79,4 +79,4 @@ void Sphere::Draw (StatePtr st)
 {
   glBindVertexArray(m_vao);
   glDrawElements(GL_TRIANGLES,m_nind,GL_UNSIGNED_INT,0);
-}
+} */

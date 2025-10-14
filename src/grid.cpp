@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include "stdlib.h"
 
 #define INDEX(i,j,nx) ((unsigned int)((j)*(nx+1)+(i)))
 
@@ -14,14 +15,31 @@ Grid::Grid (int nx, int ny, float dis)
 : m_nx(nx), m_ny(ny)
 {
   // allocate and fill coordinates
-  m_coords = new float[2*VertexCount()];
+  m_coords = new float[4*VertexCount()];
   float dx = dis / nx;
   float dy = dis / ny;
   int nc = 0;
+
+      std::cout << dx << std::endl;
+      std::cout << dy << std::endl;
+
   for (int j=0; j<=m_ny; ++j) {
     for (int i=0; i<=m_nx; ++i) {
       m_coords[nc++] = i*dx - 1.0f;
+
+      std::cout << m_coords[nc -1] << std::endl;
+
       m_coords[nc++] = j*dy - 1.0f;
+
+      std::cout << m_coords[nc -1] << std::endl;
+      //exit(0);
+
+      m_coords[nc++] = (float)i / (float)nx;
+      std::cout << m_coords[nc - 1] << std::endl;
+
+      m_coords[nc++] = (float)j / (float)ny;
+      std::cout << m_coords[nc - 1] << std::endl;
+
     }
   }
   // allocate and fill indices

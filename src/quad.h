@@ -10,11 +10,10 @@ using QuadPtr = std::shared_ptr<Quad>;
 
 class Quad : public Shape {
   unsigned int m_vao;
-  unsigned int m_nind; // number of incident vertices
 protected:
-  Quad (int nx, int ny, float dis);
+  Quad (std::vector<glm::vec2> coord, std::vector<glm::vec2> coordText);
 public:
-  static QuadPtr Make (int nx=1, int ny=1, float dis=1.0f);
+  static QuadPtr Make (std::vector<glm::vec2> coord, std::vector<glm::vec2> coordText);
   virtual ~Quad ();
   virtual void Draw (StatePtr st);
 };

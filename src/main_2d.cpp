@@ -1,9 +1,12 @@
 
 #ifdef _WIN32
-#define GLAD_GL_IMPLEMENTATION // Necessary for headeronly version.
 #include <glad/glad.h>
+
 #elif __APPLE__
 #include <OpenGL/gl3.h>
+
+#elif __linux__
+#include <glad/glad.h>
 #endif
 #include <GLFW/glfw3.h>
 
@@ -104,7 +107,6 @@ static void initialize (void)
   glClearColor(0.0f,0.0f,0.0f,1.0f);
   // enable depth test 
   glEnable(GL_DEPTH_TEST);
-
   // enable blending
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -116,7 +118,7 @@ static void initialize (void)
 
   ////espaco
   auto espaco_trf = Transform::Make();
-  espaco_trf->Scale(2.0f, 2.0f, 1.0f);
+  espaco_trf->Scale(1.7f, 1.0f, 1.0f);
 
   ////sol
   auto sun_trf = Transform::Make();
@@ -125,7 +127,6 @@ static void initialize (void)
 
   //Mercury
   auto mercury_orbit_trf = Transform::Make();
-
   auto mercury_trf = Transform::Make();
   mercury_trf->Scale(0.15f, 0.15f, 1.0f);
 
@@ -150,7 +151,7 @@ static void initialize (void)
   TexturePtr moon_text = Texture::Make("face", "images/moon.jpeg");
 
   //hierarquia da cena
-  //Espaço->Sol->Terra->Lua
+  //Espaï¿½o->Sol->Terra->Lua
 
   DiskPtr disk_moon = Disk::Make(5000);
 
@@ -174,10 +175,43 @@ static void initialize (void)
 
   DiskPtr disk_sun = Disk::Make(5000);
   disk_sun->set_text_name("face");
-  auto sun = Node::Make(sun_trf, { sun_text }, { disk_sun }, { earth_orbit, mercury_orbit }); //quandrado num intervalo de [0-1] em x e y
+  auto sun = Node::Make(sun_trf, { sun_text }, { disk_sun }, { earth_orbit, mercury_orbit }); //quadrado num intervalo de [0-1] em x e y
+  
+  int vp[ 4 ] ;
+  glGetIntegerv (GL_VIEWPORT, vp);
+  float w = (float) vp [2];
+  float h = (float) vp [3];
+  float xmax = 1, ymax = 1, xmin = -1, ymin = -1;
 
-  auto espaco = Node::Make(espaco_trf, { Color::Make(1.0f, 1.0f, 1.0f), texture_space }, { Quad::Make(1,1,2) }); //quandrado num intervalo de [-1 - 0] em x e y
+  auto dx = xmax - xmin;
+  auto dy = ymax - ymin;
+  if (w/h > dx/dy)
+  {
+    auto xc = (xmin + xmax)/2;
+    xmin = xc - dx/2 * w/h;
+    xmax = xc + dx/2 * w/h;
+  }
+  else
+  {
+    auto yc = (ymin + ymax)/2;
+    ymin = yc - dy/2 * h/w;
+    ymax = yc + dy/2 * h/w;
+  }
+  std::vector<glm::vec2> coord = {
+    {xmin, ymin},
+    {xmax ,ymin},
+    {xmax , ymax},
+    {xmin, ymax}
+  };
 
+  std::vector<glm::vec2> coordText = {
+    {0.0f, 0.0f},
+    {1.0f ,0.0f},
+    {1.0f , 1.0f},
+    {0.0f, 1.0f}
+  };
+
+  auto espaco = Node::Make(espaco_trf, { Color::Make(1.0f, 1.0f, 1.0f), texture_space }, { Quad::Make(coord, coordText) }); //quadrado num intervalo de [-1 - 0] em x e y
   auto shader = Shader::Make();
   shader->AttachVertexShader("shaders/2d/vertex.glsl");
   shader->AttachFragmentShader("shaders/2d/fragment.glsl");
@@ -191,8 +225,6 @@ static void initialize (void)
   scene->AddEngine(MoveAstro::Make(mercury_orbit_trf, 3.5f, 0.8f));
   scene->AddEngine(AxisRotation::Make(earth_rotation_trf, 20.f, 0.3f));
   
-  
-
 }
 
 static void display (GLFWwindow* win)
@@ -238,7 +270,6 @@ int main ()
 #endif
 
     glfwSetErrorCallback(error);
-
     GLFWwindow* win = glfwCreateWindow(600, 400, "Window title", nullptr, nullptr);
     assert(win);
     glfwSetFramebufferSizeCallback(win, resize);  // resize callback
@@ -251,6 +282,12 @@ int main ()
         exit(1);
     }
 #endif
+  #if defined(__linux__) && defined(__glad_h_)
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    printf("Failed to initialize GLAD OpenGL context\n");
+    exit(1);
+   }
+  #endif
     printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 
   initialize();

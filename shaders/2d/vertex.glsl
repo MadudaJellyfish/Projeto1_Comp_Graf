@@ -13,5 +13,6 @@ void main (void)
 {
   v.textcoord = textcoord;
   gl_Position = Mvp * vertex;
+  //gl_Position = vertex;
 }
 
